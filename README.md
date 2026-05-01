@@ -6,4 +6,4 @@
 5. `python app.py` (starts the Flask server)
 
 Default admin login:
-Email: admin@gmail.com | Password: Admin@1234
+Email: admin@resume.com | Password: Admin@1234
