@@ -17,12 +17,12 @@ def init_db():
 
 def seed_admin():
     with get_connection() as conn:
-        admin = conn.execute("SELECT * FROM users WHERE email = 'admin@gmail.com'").fetchone()
+        admin = conn.execute("SELECT * FROM users WHERE email = 'admin@resume.com'").fetchone()
         if not admin:
             pw_hash = bcrypt.generate_password_hash('Admin@1234').decode('utf-8')
             conn.execute(
                 "INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)",
-                ('admin', 'admin@gmail.com', pw_hash, 'admin')
+                ('admin', 'admin@resume.com', pw_hash, 'admin')
             )
             conn.commit()
 
