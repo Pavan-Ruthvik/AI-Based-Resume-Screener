@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid py-3">
+    
+    <div class="mb-4">
+        <h1 class="fw-bold"><i class="fas fa-file-upload text-primary me-2"></i>Batch Screen Resumes</h1>
+        <p class="text-muted fs-5">Upload candidate resumes (PDF, DOCX) to instantly score them against your job description.</p>
+    </div>
+
+    <div class="custom-card p-4" style="max-width: 800px;">
+        <form method="POST" action="{{ url_for('recruiter.upload') }}" enctype="multipart/form-data" id="uploadForm">
+            
+            <div class="mb-4">
+                <label for="resumes" class="form-label fw-bold fs-5 mb-1">
+                    <i class="fas fa-file-pdf text-danger me-2"></i>Upload Resumes
+                </label>
+                <p class="text-muted small mb-2">Select multiple files (PDF, DOCX, or CSV) at once.</p>
+                <input class="form-control form-control-lg bg-light" type="file" id="resumes" name="resumes" accept=".pdf,.docx,.csv" multiple required style="border: 2px dashed #cbd5e1;">
+            </div>
+
+            <div class="mb-4">
+                <label for="job_description" class="form-label fw-bold fs-5 mb-1">
+                    <i class="fas fa-briefcase text-primary me-2"></i>Job Description <span class="badge bg-secondary ms-2" style="font-size: 0.7em;">Optional</span>
+                </label>
+                <p class="text-muted small mb-2">Paste the requirements to see exact skill matches.</p>
+                <textarea class="form-control bg-light" id="job_description" name="job_description" rows="6" placeholder="e.g. We are looking for a Senior Python developer with AWS and Docker experience..."></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold" id="submitBtn" onclick="showLoading()">
+                <i class="fas fa-bolt me-2" id="btnIcon"></i><span id="btnText">Analyze Candidates</span>
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function showLoading() {
+        const fileInput = document.getElementById('resumes');
+        if(fileInput.files.length > 0) {
+            document.getElementById('btnIcon').className = 'fas fa-spinner fa-spin me-2';
+            document.getElementById('btnText').innerText = 'Processing Batch... Please wait';
+            document.getElementById('submitBtn').classList.add('disabled');
+        }
+    }
+</script>
+{% endblock %}

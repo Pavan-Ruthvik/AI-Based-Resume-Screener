@@ -1,0 +1,9 @@
+# Ignore the live database (Security & Best Practice)
+auth.db
+
+# Ignore Python cache folders (Junk files)
+__pycache__/
+*.pyc
+
+# Ignore environment variables if you add them later
+.env

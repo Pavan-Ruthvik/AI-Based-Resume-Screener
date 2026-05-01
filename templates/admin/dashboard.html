@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid py-3">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="fw-bold"><i class="fas fa-brain text-primary me-2"></i>Advanced Model Diagnostics</h1>
+            <p class="text-muted fs-5">Deep-dive metrics to evaluate AI performance and feature importance.</p>
+        </div>
+        <button class="btn btn-outline-primary fw-bold" onclick="window.location.reload();">
+            <i class="fas fa-sync-alt me-2"></i>Refresh Metrics
+        </button>
+    </div>
+
+    {% if metrics %}
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="custom-card p-4 text-center border-start border-success border-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="text-muted text-uppercase fw-bold mb-0">Model Accuracy</h6>
+                    <i class="fas fa-bullseye text-success fs-4"></i>
+                </div>
+                <h2 class="fw-bold text-dark text-start mb-0">{{ (metrics.accuracy * 100)|round(1) }}%</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="custom-card p-4 text-center border-start border-primary border-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="text-muted text-uppercase fw-bold mb-0">Resumes Trained</h6>
+                    <i class="fas fa-file-alt text-primary fs-4"></i>
+                </div>
+                <h2 class="fw-bold text-dark text-start mb-0">{{ metrics.total_resumes_trained }}</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="custom-card p-4 text-center border-start border-warning border-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="text-muted text-uppercase fw-bold mb-0">Job Categories</h6>
+                    <i class="fas fa-layer-group text-warning fs-4"></i>
+                </div>
+                <h2 class="fw-bold text-dark text-start mb-0">{{ metrics.categories|length }}</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="custom-card p-4 text-center border-start border-info border-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="text-muted text-uppercase fw-bold mb-0">Test Split Size</h6>
+                    <i class="fas fa-vial text-info fs-4"></i>
+                </div>
+                <h2 class="fw-bold text-dark text-start mb-0">{{ metrics.test_size }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-8">
+            <div class="custom-card p-4 h-100">
+                <h5 class="fw-bold mb-3"><i class="fas fa-chart-bar text-primary me-2"></i>Precision, Recall & F1 Score</h5>
+                <p class="text-muted small mb-4">A complete breakdown of model quality vs. quantity for every job category.</p>
+                <div style="height: 300px;">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="custom-card p-4 h-100 d-flex flex-column">
+                <h5 class="fw-bold mb-3"><i class="fas fa-chart-pie text-success me-2"></i>Overall Accuracy</h5>
+                <p class="text-muted small mb-4">Ratio of correct vs incorrect predictions.</p>
+                <div style="height: 250px; flex-grow: 1;">
+                    <canvas id="accChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="custom-card p-4">
+                <h5 class="fw-bold mb-3"><i class="fas fa-key text-warning me-2"></i>Top Learned Keywords</h5>
+                <p class="text-muted small mb-4">The exact words the AI relies on most to classify a candidate.</p>
+                <div style="height: 350px;">
+                    <canvas id="featureChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-12">
+            <div class="custom-card p-4 overflow-auto">
+                <h5 class="fw-bold mb-3"><i class="fas fa-th text-danger me-2"></i>Confusion Matrix</h5>
+                <p class="text-muted small mb-3">Rows: Actual Category | Columns: Predicted Category. Darker blue means more predictions.</p>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm text-center align-middle" id="confusionMatrixTable" style="font-size: 0.85rem;">
+                        </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const metrics = {{ metrics|tojson }};
+        
+        // --- 1. Grouped Bar Chart (Precision, Recall, F1) ---
+        new Chart(document.getElementById('performanceChart'), {
+            type: 'bar',
+            data: { 
+                labels: metrics.categories, 
+                datasets: [
+                    { label: 'Precision', data: metrics.precision, backgroundColor: '#3b82f6', borderRadius: 4 }, // Blue
+                    { label: 'Recall', data: metrics.recall, backgroundColor: '#10b981', borderRadius: 4 },    // Green
+                    { label: 'F1 Score', data: metrics.f1, backgroundColor: '#6366f1', borderRadius: 4 }       // Indigo
+                ] 
+            },
+            options: { 
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, max: 1.0 },
+                    x: { ticks: { autoSkip: false, maxRotation: 45, minRotation: 45 } }
+                },
+                plugins: { legend: { position: 'top' } }
+            }
+        });
+
+        // --- 2. Accuracy Doughnut Chart ---
+        new Chart(document.getElementById('accChart'), {
+            type: 'doughnut',
+            data: { 
+                labels: ['Correct', 'Incorrect'], 
+                datasets: [{ 
+                    data: [metrics.accuracy, 1 - metrics.accuracy], 
+                    backgroundColor: ['#10b981', '#ef4444'], borderWidth: 0
+                }] 
+            },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom' } } }
+        });
+
+        // --- 3. Feature Importances Horizontal Bar Chart ---
+        if (metrics.top_keywords && metrics.top_weights) {
+            new Chart(document.getElementById('featureChart'), {
+                type: 'bar',
+                data: {
+                    labels: metrics.top_keywords,
+                    datasets: [{
+                        label: 'Feature Weight',
+                        data: metrics.top_weights,
+                        backgroundColor: '#f59e0b', // Amber
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // Makes it horizontal
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        // --- 4. Confusion Matrix Heatmap (Dynamic HTML Table) ---
+        if (metrics.confusion_matrix && metrics.categories) {
+            const table = document.getElementById('confusionMatrixTable');
+            const cm = metrics.confusion_matrix;
+            const cats = metrics.categories;
+            
+            // Find max value to calculate color intensity
+            let maxVal = 0;
+            cm.forEach(row => row.forEach(val => { if (val > maxVal) maxVal = val; }));
+
+            // Create Header Row
+            let thead = '<thead><tr><th class="bg-light fw-bold">Actual \\ Predicted</th>';
+            cats.forEach(c => { thead += `<th class="bg-light" title="${c}">${c.substring(0,4)}.</th>`; });
+            thead += '</tr></thead>';
+            table.innerHTML = thead;
+
+            // Create Body Rows with Color Mapping
+            let tbody = '<tbody>';
+            for (let i = 0; i < cats.length; i++) {
+                tbody += `<tr><th class="bg-light text-start align-middle">${cats[i]}</th>`;
+                for (let j = 0; j < cats.length; j++) {
+                    let val = cm[i][j];
+                    // Calculate opacity based on value compared to max (avoid completely white for 0)
+                    let alpha = val === 0 ? 0.05 : (val / maxVal) * 0.9 + 0.1;
+                    // Blue heatmap scale
+                    let bgColor = `rgba(79, 70, 229, ${alpha})`; 
+                    let textColor = alpha > 0.5 ? 'white' : 'black';
+                    
+                    tbody += `<td style="background-color: ${bgColor}; color: ${textColor}; font-weight: ${val>0?'bold':'normal'};">${val}</td>`;
+                }
+                tbody += '</tr>';
+            }
+            tbody += '</tbody>';
+            table.innerHTML += tbody;
+        }
+    </script>
+    
+    {% else %}
+    <div class="custom-card p-5 text-center mt-4">
+        <i class="fas fa-robot fa-4x text-muted mb-3"></i>
+        <h3 class="fw-bold">Model Not Trained</h3>
+        <p class="text-muted fs-5">Train your model and pass the advanced metrics dictionary to view these charts.</p>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

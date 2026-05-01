@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="bg-success bg-gradient text-white py-5 mb-5 rounded-bottom-4 shadow-sm" style="margin-top: -1.5rem;">
+    <div class="container py-5 text-center">
+        <h1 class="display-4 fw-bold mb-3">
+            <i class="fas fa-robot me-3"></i>Smarter Hiring, Powered by AI
+        </h1>
+        <p class="lead mb-4 fw-normal" style="max-width: 700px; margin: 0 auto;">
+            Instantly parse, categorize, and rank applicant resumes using our ML model. Drop the manual reading and let the data decide.
+        </p>
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg fw-bold px-5 rounded-pill text-primary shadow">
+                Get Started
+            </a>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-lg fw-bold px-5 rounded-pill">
+                Log In
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container mb-5 pb-4">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold text-dark">How It Works</h2>
+        <p class="text-muted fs-5">A seamless, automated pipeline from application to shortlisting.</p>
+    </div>
+    
+    <div class="row g-4 text-center">
+        <div class="col-md-4">
+            <div class="p-4 bg-white rounded-4 shadow-sm h-100 border-top border-primary border-4 transition-hover">
+                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                    <i class="fas fa-cloud-upload-alt fa-2x text-primary"></i>
+                </div>
+                <h4 class="fw-bold">1. Upload</h4>
+                <p class="text-muted">Candidates or recruiters upload resumes. Our system instantly handles the heavy lifting of extracting raw text and formatting.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="p-4 bg-white rounded-4 shadow-sm h-100 border-top border-warning border-4 transition-hover">
+                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                    <i class="fas fa-brain fa-2x text-warning"></i>
+                </div>
+                <h4 class="fw-bold">2. AI Analysis</h4>
+                <p class="text-muted">Our trained Support Vector Machine (SVM) scans for keywords, skills, and context to determine the perfect job category.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="p-4 bg-white rounded-4 shadow-sm h-100 border-top border-success border-4 transition-hover">
+                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                    <i class="fas fa-user-check fa-2x text-success"></i>
+                </div>
+                <h4 class="fw-bold">3. Match & Hire</h4>
+                <p class="text-muted">Review sorted dashboards. Instantly see top candidates grouped by role, backed by hard ML confidence scores.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="bg-light py-5 rounded-4 shadow-sm mb-5">
+    <div class="container py-4">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-5">
+                <h2 class="fw-bold mb-3">Built for Every User</h2>
+                <p class="text-muted fs-5 mb-4">
+                    Our platform utilizes strict Role-Based Access Control (RBAC). Whether you are applying for a job, looking for talent, or training the AI, you get exactly the tools you need.
+                </p>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary fw-bold px-4 py-2 rounded-pill shadow-sm">
+                    Create an Account <i class="fas fa-arrow-right ms-2"></i>
+                </a>
+            </div>
+            
+            <div class="col-lg-7">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm rounded-4 h-100">
+                            <div class="card-body p-4">
+                                <i class="fas fa-user-tie fa-2x text-info mb-3"></i>
+                                <h5 class="fw-bold">For Job Seekers</h5>
+                                <p class="text-muted small mb-0">Upload your resume and see exactly how our AI parses and categorizes your skills in real-time.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm rounded-4 h-100">
+                            <div class="card-body p-4">
+                                <i class="fas fa-users fa-2x text-success mb-3"></i>
+                                <h5 class="fw-bold">For Recruiters</h5>
+                                <p class="text-muted small mb-0">Access a master dashboard to filter through thousands of applicants sorted automatically by their best-fit roles.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="card border-0 shadow-sm rounded-4 h-100 bg-dark text-white">
+                            <div class="card-body p-4 d-flex align-items-center">
+                                <div class="me-4">
+                                    <i class="fas fa-cogs fa-3x text-warning"></i>
+                                </div>
+                                <div>
+                                    <h5 class="fw-bold text-warning">For Administrators</h5>
+                                    <p class="small mb-0 text-light">Access advanced ML diagnostics, view confusion matrices, track precision/recall, and evaluate feature weights.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container text-center mb-5 pb-3">
+    <h3 class="fw-bold mb-3">Ready to transform your hiring process?</h3>
+    <p class="text-muted mb-4">Join today and experience the power of automated resume parsing.</p>
+    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg fw-bold px-5 rounded-pill shadow">Get Started Now</a>
+</div>
+
+<style>
+    .transition-hover {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .transition-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+    }
+</style>
+
+{% endblock %}

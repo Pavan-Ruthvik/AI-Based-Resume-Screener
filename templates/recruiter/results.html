@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid py-3">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="fw-bold"><i class="fas fa-chart-line text-primary me-2"></i>Batch Screening Results</h1>
+            <p class="text-muted fs-5">Data-driven insights for your uploaded candidates.</p>
+        </div>
+        <a href="{{ url_for('recruiter.dashboard') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-2"></i>Upload Another Batch</a>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="custom-card p-3 text-center">
+                <h6 class="text-muted text-uppercase fw-bold mb-2">Total Resumes</h6>
+                <h2 class="fw-bold text-primary mb-0" id="totalCount">{{ results|length }}</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="custom-card p-3 text-center">
+                <h6 class="text-muted text-uppercase fw-bold mb-2">Avg Score</h6>
+                <h2 class="fw-bold text-primary mb-0" id="avgScore">0</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="custom-card p-3 text-center">
+                <h6 class="text-muted text-uppercase fw-bold mb-2">Top Score</h6>
+                <h2 class="fw-bold text-success mb-0" id="topScore">0</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="custom-card p-3 text-center">
+                <h6 class="text-muted text-uppercase fw-bold mb-2">Categories Found</h6>
+                <h2 class="fw-bold text-warning mb-0" id="catCount">0</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="custom-card p-3 h-100">
+                <h5 class="fw-bold mb-3">Score Distribution</h5>
+                <div style="height: 250px;"><canvas id="scoreHist"></canvas></div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="custom-card p-3 h-100">
+                <h5 class="fw-bold mb-3">Predicted Categories</h5>
+                <div style="height: 250px;"><canvas id="catDoughnut"></canvas></div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="custom-card p-3 h-100">
+                <h5 class="fw-bold mb-3">Top 10 Matched Skills</h5>
+                <div style="height: 250px;"><canvas id="skillsBar"></canvas></div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="custom-card p-3 h-100">
+                <h5 class="fw-bold mb-3">ATS Score vs Keyword Count</h5>
+                <div style="height: 250px;"><canvas id="scoreKeywordChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="custom-card p-4 mb-4 bg-light border-0">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-4">
+                <label class="form-label fw-bold"><i class="fas fa-search me-2"></i>Search Candidate</label>
+                <input type="text" class="form-control" id="searchInput" placeholder="Type a name..." onkeyup="filterTable()">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-bold"><i class="fas fa-sliders-h me-2"></i>Min ATS Score: <span id="scoreVal" class="text-primary">0</span></label>
+                <input type="range" class="form-range" id="scoreFilter" min="0" max="100" value="0" oninput="document.getElementById('scoreVal').innerText=this.value; filterTable()">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-bold"><i class="fas fa-filter me-2"></i>Filter Category</label>
+                <select class="form-select" id="catFilter" onchange="filterTable()">
+                    <option value="all">All Categories</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="custom-card p-0 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="resultsTable">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Rank</th>
+                        <th>Name</th>
+                        <th>Predicted Category</th>
+                        <th style="width: 25%;">ATS Score</th>
+                        <th class="pe-4">Confidence</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in results %}
+                    <tr class="data-row" data-score="{{ r.ats_score }}" data-name="{{ r.name|lower }}" data-cat="{{ r.predicted_category }}">
+                        <td class="ps-4 fw-bold text-muted rank-col">#{{ loop.index }}</td>
+                        <td><span class="fw-bold">{{ r.name }}</span></td>
+                        <td><span class="badge bg-primary text-wrap" style="max-width: 150px;">{{ r.predicted_category }}</span></td>
+                        <td>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <small class="fw-bold">{{ r.ats_score }}/100</small>
+                            </div>
+                            <div class="ats-bar-container">
+                                <div class="ats-bar-fill {% if r.ats_score < 40 %}bg-danger{% elif r.ats_score < 70 %}bg-warning{% else %}bg-success{% endif %}" style="width:{{ r.ats_score }}%;"></div>
+                            </div>
+                        </td>
+                        <td class="pe-4 fw-bold">{{ (r.confidence * 100)|round(1) }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const rawData = {{ results|tojson }};
+    
+    // Process Data for Charts and Summaries
+    let scores = []; let categories = {}; let skills = {}; 
+    let candidateNames = []; let candidateScores = []; let candidateKeywords = [];
+    
+    rawData.forEach(r => {
+        scores.push(r.ats_score);
+        categories[r.predicted_category] = (categories[r.predicted_category] || 0) + 1;
+        r.matched_skills.forEach(s => { skills[s] = (skills[s] || 0) + 1; });
+        
+        let shortName = r.name.length > 15 ? r.name.substring(0, 15) + '...' : r.name;
+        candidateNames.push(shortName);
+        candidateScores.push(r.ats_score);
+        candidateKeywords.push(r.keyword_count);
+    });
+
+    // Populate Summary Cards
+    document.getElementById('avgScore').innerText = scores.length ? Math.round(scores.reduce((a,b)=>a+b,0) / scores.length) : 0;
+    document.getElementById('topScore').innerText = scores.length ? Math.max(...scores) : 0;
+    document.getElementById('catCount').innerText = Object.keys(categories).length;
+
+    // Populate Category Dropdown
+    const catSelect = document.getElementById('catFilter');
+    Object.keys(categories).forEach(cat => {
+        let opt = document.createElement('option');
+        opt.value = cat; opt.innerHTML = cat;
+        catSelect.appendChild(opt);
+    });
+
+    // Table Filtering Logic
+    function filterTable() {
+        let search = document.getElementById('searchInput').value.toLowerCase();
+        let minScore = parseInt(document.getElementById('scoreFilter').value);
+        let catFilter = document.getElementById('catFilter').value;
+        
+        let rows = document.querySelectorAll('.data-row');
+        let visibleCount = 1;
+        
+        rows.forEach(row => {
+            let name = row.getAttribute('data-name');
+            let score = parseInt(row.getAttribute('data-score'));
+            let cat = row.getAttribute('data-cat');
+            
+            let matchesSearch = name.includes(search);
+            let matchesScore = score >= minScore;
+            let matchesCat = (catFilter === 'all' || cat === catFilter);
+            
+            if (matchesSearch && matchesScore && matchesCat) {
+                row.style.display = '';
+                row.querySelector('.rank-col').innerText = '#' + visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    // Chart 1: Histogram (Score Bins)
+    let bins = [0,0,0,0,0]; 
+    scores.forEach(s => { if(s<=20) bins[0]++; else if(s<=40) bins[1]++; else if(s<=60) bins[2]++; else if(s<=80) bins[3]++; else bins[4]++; });
+    new Chart(document.getElementById('scoreHist'), {
+        type: 'bar',
+        data: { labels: ['0-20', '21-40', '41-60', '61-80', '81-100'], datasets: [{ label: 'Resumes', data: bins, backgroundColor: '#4f46e5', borderRadius: 4 }] },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    // Chart 2: Category Doughnut
+    new Chart(document.getElementById('catDoughnut'), {
+        type: 'doughnut',
+        data: { labels: Object.keys(categories), datasets: [{ data: Object.values(categories), backgroundColor: ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'], borderWidth: 0 }] },
+        options: { responsive: true, maintainAspectRatio: false, cutout: '70%' }
+    });
+
+    // Chart 3: Top Skills Bar
+    let sortedSkills = Object.entries(skills).sort((a,b)=>b[1]-a[1]).slice(0,10);
+    new Chart(document.getElementById('skillsBar'), {
+        type: 'bar',
+        data: { labels: sortedSkills.map(s=>s[0]), datasets: [{ label: 'Occurrences', data: sortedSkills.map(s=>s[1]), backgroundColor: '#10b981', borderRadius: 4 }] },
+        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false }
+    });
+
+    // Chart 4: Dual-Axis Mixed Chart (Score vs Keyword Count)
+    new Chart(document.getElementById('scoreKeywordChart'), {
+        type: 'bar',
+        data: {
+            labels: candidateNames,
+            datasets: [
+                { label: 'ATS Score (0-100)', type: 'bar', data: candidateScores, backgroundColor: '#4f46e5', yAxisID: 'y', borderRadius: 4 },
+                { label: 'Keyword Count', type: 'line', data: candidateKeywords, borderColor: '#f59e0b', backgroundColor: '#f59e0b', borderWidth: 3, pointRadius: 4, yAxisID: 'y1' }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: {
+                y: { type: 'linear', display: true, position: 'left', min: 0, max: 100 },
+                y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false }, min: 0 }
+            }
+        }
+    });
+</script>
+{% endblock %}
